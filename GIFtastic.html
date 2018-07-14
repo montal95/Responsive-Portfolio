@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GIFtastic</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+        crossorigin="anonymous">
+
+    <body>
+        <div class="container mt-2">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="jumbotron">
+                        <h1>GIFtastic App</h1>
+                        <form>
+                            <div class="form-group">
+                                <label for="keyword">Keywords</label>
+                                <input type="keyword" class="form-control" id="gifSearch" placeholder="Search">
+                            </div>
+                            <button class="btn btn-primary" id="searchSubmit">Submit</button>
+                        </form>
+                        <br>
+                        <div class="buttonDiv">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="imagesDiv">
+
+            </div>
+
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript">
+
+
+            //variables set for the initial array and the frequently used div
+            var buttonArea = $(".buttonDiv");
+            var initialArray = ["arnold schwarzenegger", "car", "cat", "dog", "turtle", "fish"];
+            var gifArea = $('.imagesDiv');
+
+            //generate buttons initially
+            function buttonGenerate() {
+
+                buttonArea.empty();
+                for (var i = 0; i < initialArray.length; i++) {
+                    var b = $("<button>");
+                    b.addClass("gifButton btn btn-info mr-1");
+                    b.attr("data-name", initialArray[i]);
+                    b.text(initialArray[i]);
+                    buttonArea.append(b);
+                }
+            }
+            buttonGenerate();
+
+            //enter the new search keyword into the list of buttons
+            $("#searchSubmit").on("click", function(event) {
+                event.preventDefault();
+                $(".imagesDiv").empty();
+                var newKeyword = $("#gifSearch").val().trim();
+                initialArray.push(newKeyword);
+                buttonGenerate();
+                //after the button generates, search and pull up the new gifs
+                var search = newKeyword;
+                var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=6m9T79R8daw69lZ2gOBXVI7Naakea07S&q=" +
+                    search + "&limit=12&offset=0&rating=G&lang=en";
+
+                ajaxCall(queryURL);
+            })
+
+
+            //this function takes the user input from the form and plugs it into the ajaxCall function
+            $(buttonArea).on("click", ".gifButton", function(event) {
+                event.preventDefault();
+                console.log("this:", $(this));
+                $(".imagesDiv").empty();
+                var search = $(this).attr("data-name");
+                var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=6m9T79R8daw69lZ2gOBXVI7Naakea07S&q=" +
+                    search + "&limit=12&offset=0&rating=G&lang=en";
+                ajaxCall(queryURL);
+
+            });
+
+            //ajax call function to generate text and images with assigned classes and ids
+            function ajaxCall(queryURL) {
+                $.ajax({
+                    url: queryURL,
+                    method: "GET"
+                }).then(function (response) {
+
+                    var results = response.data;
+
+                    console.log(results);
+
+                    //the loop used to generate the images and rating text for every image returned from the API response
+                    for (var i = 0; i < results.length; i++) {
+
+                        var gifDiv = $("<div>");
+                        var rating = results[i].rating;
+                        var p = $("<p>").text("Rating: " + rating);
+                        var gifImage = $("<img>");
+                        gifImage.attr("src", results[i].images.fixed_height_still.url);
+                        gifImage.attr("data-state", "still");
+                        gifImage.attr("data-animate", results[i].images.fixed_height.url);
+                        gifImage.attr("data-still", results[i].images.fixed_height_still.url);
+                        gifImage.attr("id", "gifview");
+                        gifImage.attr("title", results[i].title);
+                        gifDiv.addClass("col-md-5 m-3 float-left");
+                        gifDiv.append(p);
+                        gifDiv.append(gifImage);
+                        $(".imagesDiv").prepend(gifDiv);
+
+                    }
+
+                })
+            }
+
+            //this pauses or animates the gif on idividual clicks
+            $(gifArea).on("click", "#gifview" , function(){
+                console.log("this:", $(this));
+
+                var state = $(this).attr("data-state");
+                if (state === "still") {
+                    $(this).attr("src", $(this).attr("data-animate"));
+                    $(this).attr("data-state", "animate");
+                } else {
+                    $(this).attr("src", $(this).attr("data-still"));
+                    $(this).attr("data-state", "still");
+                }
+            });
+
+
+
+        </script>
+
+
+
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+            crossorigin="anonymous"></script>
+    </body>
+
+</html>
